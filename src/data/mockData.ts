@@ -20,6 +20,14 @@ export interface Lead {
   callDetails: string;
   nextFollowUp?: string;
   isOverdue?: boolean;
+  notes?: Note[];
+}
+
+export interface Note {
+  id: number;
+  text: string;
+  createdAt: string;
+  author: string;
 }
 
 export const COUNSELLOR_NAME = "Sarah Mitchell";
@@ -34,6 +42,10 @@ export const mockLeads: Lead[] = [
     stage: "Interested", priority: "High", branch: "Main Branch",
     callDetails: "Student is keen on Fall intake. W...", nextFollowUp: "2025-03-14",
     isOverdue: true,
+    notes: [
+      { id: 1, text: "Student is very interested in Fall 2025 intake at UofT", createdAt: "Jan 16, 2025", author: "Sarah Mitchell" },
+      { id: 2, text: "Called and discussed scholarship options", createdAt: "Feb 02, 2025", author: "Sarah Mitchell" },
+    ],
   },
   {
     id: 2, name: "Sara Khan", phone: "+44 7700 900001", email: "sara.khan@email.com",
@@ -42,6 +54,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Application Started", priority: "Medium", branch: "Downtown Office",
     callDetails: "No calls",
+    notes: [{ id: 1, text: "Interested in nursing programs in Melbourne", createdAt: "Feb 02, 2025", author: "Sarah Mitchell" }],
   },
   {
     id: 3, name: "Rahul Sharma", phone: "+91 98765 43210", email: "rahul.sharma@email.com",
@@ -50,6 +63,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Counselling", priority: "High", branch: "Westside Branch",
     callDetails: "No calls",
+    notes: [],
   },
   {
     id: 4, name: "Maria Garcia", phone: "+34 612 345 678", email: "maria.garcia@email.com",
@@ -58,6 +72,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "New",
     stage: "New Lead", priority: "Medium", branch: "Main Branch",
     callDetails: "No calls",
+    notes: [],
   },
   {
     id: 5, name: "Ahmed Hassan", phone: "+20 100 123 4567", email: "ahmed.hassan@email.com",
@@ -66,6 +81,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "New",
     stage: "Contacted", priority: "Low", branch: "North Campus",
     callDetails: "No calls",
+    notes: [],
   },
   {
     id: 6, name: "Priya Patel", phone: "+91 87654 32100", email: "priya.patel@email.com",
@@ -74,6 +90,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Applied", priority: "High", branch: "Main Branch",
     callDetails: "Application submitted", nextFollowUp: "2025-03-20",
+    notes: [],
   },
   {
     id: 7, name: "Li Wei", phone: "+86 138 0001 2345", email: "li.wei@email.com",
@@ -82,6 +99,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Offer Received", priority: "Medium", branch: "Downtown Office",
     callDetails: "Offer from UniMelb", nextFollowUp: "2025-03-25",
+    notes: [],
   },
   {
     id: 8, name: "Fatima Al-Rashid", phone: "+971 50 123 4567", email: "fatima.alrashid@email.com",
@@ -90,6 +108,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "New",
     stage: "New Lead", priority: "Low", branch: "Westside Branch",
     callDetails: "No calls",
+    notes: [],
   },
   {
     id: 9, name: "Carlos Rodriguez", phone: "+52 55 1234 5678", email: "carlos.r@email.com",
@@ -98,6 +117,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Visa Process", priority: "High", branch: "Main Branch",
     callDetails: "Visa docs submitted", nextFollowUp: "2025-03-22", isOverdue: true,
+    notes: [],
   },
   {
     id: 10, name: "Aiko Tanaka", phone: "+81 90 1234 5678", email: "aiko.tanaka@email.com",
@@ -106,6 +126,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Converted", priority: "Medium", branch: "North Campus",
     callDetails: "Enrolled at UofT",
+    notes: [{ id: 1, text: "Successfully enrolled at University of Toronto", createdAt: "Dec 28, 2024", author: "Sarah Mitchell" }],
   },
 ];
 
@@ -116,14 +137,15 @@ export interface Task {
   dueDate: string;
   status: "today" | "upcoming" | "overdue";
   description: string;
+  completed?: boolean;
 }
 
 export const mockTasks: Task[] = [
-  { id: 1, leadName: "John Doe", type: "Follow-up", dueDate: "Today", status: "today", description: "Follow up on Fall intake interest" },
-  { id: 2, leadName: "Carlos Rodriguez", type: "Document Review", dueDate: "Today", status: "today", description: "Review visa documents" },
-  { id: 3, leadName: "Sara Khan", type: "Counselling Session", dueDate: "Tomorrow", status: "upcoming", description: "Discuss nursing program options" },
-  { id: 4, leadName: "Priya Patel", type: "Application Check", dueDate: "Mar 25", status: "upcoming", description: "Check application status at UBC" },
-  { id: 5, leadName: "Li Wei", type: "Follow-up", dueDate: "Mar 25", status: "upcoming", description: "Discuss offer acceptance" },
-  { id: 6, leadName: "John Doe", type: "Follow-up", dueDate: "Mar 14", status: "overdue", description: "Was supposed to follow up about intake" },
-  { id: 7, leadName: "Carlos Rodriguez", type: "Follow-up", dueDate: "Mar 22", status: "overdue", description: "Visa document follow-up overdue" },
+  { id: 1, leadName: "John Doe", type: "Follow-up", dueDate: "Today", status: "today", description: "Follow up on Fall intake interest", completed: false },
+  { id: 2, leadName: "Carlos Rodriguez", type: "Document Review", dueDate: "Today", status: "today", description: "Review visa documents", completed: false },
+  { id: 3, leadName: "Sara Khan", type: "Counselling Session", dueDate: "Tomorrow", status: "upcoming", description: "Discuss nursing program options", completed: false },
+  { id: 4, leadName: "Priya Patel", type: "Application Check", dueDate: "Mar 25", status: "upcoming", description: "Check application status at UBC", completed: false },
+  { id: 5, leadName: "Li Wei", type: "Follow-up", dueDate: "Mar 25", status: "upcoming", description: "Discuss offer acceptance", completed: false },
+  { id: 6, leadName: "John Doe", type: "Follow-up", dueDate: "Mar 14", status: "overdue", description: "Was supposed to follow up about intake", completed: false },
+  { id: 7, leadName: "Carlos Rodriguez", type: "Follow-up", dueDate: "Mar 22", status: "overdue", description: "Visa document follow-up overdue", completed: false },
 ];

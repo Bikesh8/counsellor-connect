@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft, User, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 
@@ -13,6 +13,11 @@ const managementItems = [
   { title: "Students", url: "/students", icon: GraduationCap },
 ];
 
+const accountItems = [
+  { title: "My Profile", url: "/profile", icon: User },
+  { title: "Settings", url: "/settings", icon: Settings },
+];
+
 interface AppSidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -21,8 +26,13 @@ interface AppSidebarProps {
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const location = useLocation();
 
+  const isActive = (path: string) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
+
   const linkClass = (path: string) => {
-    const active = location.pathname === path;
+    const active = isActive(path);
     return `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
       active
         ? "bg-sidebar-primary text-sidebar-primary-foreground"
@@ -30,13 +40,22 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
     }`;
   };
 
+  const renderSection = (label: string, items: typeof mainItems) => (
+    <div>
+      {!collapsed && <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground mb-2 px-3">{label}</p>}
+      <div className="space-y-1">
+        {items.map((item) => (
+          <NavLink key={item.url} to={item.url} end={item.url === "/"} className={linkClass(item.url)} activeClassName="">
+            <item.icon className="w-4 h-4 shrink-0" />
+            {!collapsed && <span>{item.title}</span>}
+          </NavLink>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
-    <aside
-      className={`fixed top-0 left-0 h-screen bg-sidebar flex flex-col transition-all duration-300 z-50 ${
-        collapsed ? "w-16" : "w-56"
-      }`}
-    >
-      {/* Logo */}
+    <aside className={`fixed top-0 left-0 h-screen bg-sidebar flex flex-col transition-all duration-300 z-50 ${collapsed ? "w-16" : "w-56"}`}>
       <div className="flex items-center justify-between px-4 h-16 border-b border-sidebar-border">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
@@ -54,38 +73,15 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         </button>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-6 overflow-y-auto">
-        <div>
-          {!collapsed && <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground mb-2 px-3">Main</p>}
-          <div className="space-y-1">
-            {mainItems.map((item) => (
-              <NavLink key={item.url} to={item.url} end className={linkClass(item.url)} activeClassName="">
-                <item.icon className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>{item.title}</span>}
-              </NavLink>
-            ))}
-          </div>
-        </div>
-        <div>
-          {!collapsed && <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground mb-2 px-3">Management</p>}
-          <div className="space-y-1">
-            {managementItems.map((item) => (
-              <NavLink key={item.url} to={item.url} end className={linkClass(item.url)} activeClassName="">
-                <item.icon className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>{item.title}</span>}
-              </NavLink>
-            ))}
-          </div>
-        </div>
+        {renderSection("Main", mainItems)}
+        {renderSection("Management", managementItems)}
+        {renderSection("Account", accountItems)}
       </nav>
 
-      {/* User */}
       <div className="p-3 border-t border-sidebar-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center text-xs font-bold text-sidebar-primary-foreground">
-            SM
-          </div>
+          <div className="w-8 h-8 rounded-full bg-sidebar-primary flex items-center justify-center text-xs font-bold text-sidebar-primary-foreground">SM</div>
           {!collapsed && (
             <div>
               <p className="text-xs font-semibold text-sidebar-accent-foreground">Sarah Mitchell</p>
