@@ -8,11 +8,12 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
+      screens: { "2xl": "1400px" },
     },
     extend: {
+      fontFamily: {
+        nunito: ['Nunito', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -57,6 +58,26 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "badge-high": "hsl(0 84% 60%)",
+        "badge-high-bg": "hsl(0 84% 95%)",
+        "badge-medium": "hsl(38 92% 50%)",
+        "badge-medium-bg": "hsl(38 92% 95%)",
+        "badge-low": "hsl(142 71% 45%)",
+        "badge-low-bg": "hsl(142 71% 95%)",
+        "stage-new": "hsl(217 91% 48%)",
+        "stage-new-bg": "hsl(217 91% 95%)",
+        "stage-contacted": "hsl(199 89% 48%)",
+        "stage-contacted-bg": "hsl(199 89% 95%)",
+        "stage-interested": "hsl(142 71% 45%)",
+        "stage-interested-bg": "hsl(142 71% 95%)",
+        "stage-counselling": "hsl(262 83% 58%)",
+        "stage-counselling-bg": "hsl(262 83% 95%)",
+        "stage-applied": "hsl(38 92% 50%)",
+        "stage-applied-bg": "hsl(38 92% 95%)",
+        "status-new": "hsl(217 91% 48%)",
+        "status-new-bg": "hsl(217 91% 95%)",
+        "status-prospect": "hsl(38 92% 50%)",
+        "status-prospect-bg": "hsl(38 92% 95%)",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -65,20 +86,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
