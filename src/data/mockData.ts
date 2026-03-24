@@ -21,6 +21,8 @@ export interface Lead {
   nextFollowUp?: string;
   isOverdue?: boolean;
   notes?: Note[];
+  callOutcome?: string;
+  callNote?: string;
 }
 
 export interface Note {
@@ -33,6 +35,19 @@ export interface Note {
 export const COUNSELLOR_NAME = "Sarah Mitchell";
 export const COUNSELLOR_INITIALS = "SM";
 
+export const CALL_OUTCOMES = [
+  "Connected - Interested",
+  "Connected - Not Interested",
+  "Connected - Call Back Later",
+  "Connected - Needs More Info",
+  "No Answer",
+  "Voicemail Left",
+  "Wrong Number",
+  "Counselling Done - Positive",
+  "Counselling Done - Undecided",
+  "Counselling Done - Negative",
+];
+
 export const mockLeads: Lead[] = [
   {
     id: 1, name: "John Doe", phone: "+1 555-0101", email: "john.doe@email.com",
@@ -42,6 +57,8 @@ export const mockLeads: Lead[] = [
     stage: "Interested", priority: "High", branch: "Main Branch",
     callDetails: "Student is keen on Fall intake. W...", nextFollowUp: "2025-03-14",
     isOverdue: true,
+    callOutcome: "Connected - Interested",
+    callNote: "Student is very keen on Fall 2025 intake. Wants to explore scholarship options at UofT.",
     notes: [
       { id: 1, text: "Student is very interested in Fall 2025 intake at UofT", createdAt: "Jan 16, 2025", author: "Sarah Mitchell" },
       { id: 2, text: "Called and discussed scholarship options", createdAt: "Feb 02, 2025", author: "Sarah Mitchell" },
@@ -54,6 +71,8 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Application Started", priority: "Medium", branch: "Downtown Office",
     callDetails: "No calls",
+    callOutcome: "Counselling Done - Positive",
+    callNote: "Discussed nursing program options in Melbourne. Student is positive about applying to Monash.",
     notes: [{ id: 1, text: "Interested in nursing programs in Melbourne", createdAt: "Feb 02, 2025", author: "Sarah Mitchell" }],
   },
   {
@@ -81,6 +100,7 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "New",
     stage: "Contacted", priority: "Low", branch: "North Campus",
     callDetails: "No calls",
+    callOutcome: "No Answer",
     notes: [],
   },
   {
@@ -90,6 +110,8 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Applied", priority: "High", branch: "Main Branch",
     callDetails: "Application submitted", nextFollowUp: "2025-03-20",
+    callOutcome: "Connected - Interested",
+    callNote: "Application submitted to UBC. Waiting for confirmation.",
     notes: [],
   },
   {
@@ -99,6 +121,8 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Offer Received", priority: "Medium", branch: "Downtown Office",
     callDetails: "Offer from UniMelb", nextFollowUp: "2025-03-25",
+    callOutcome: "Connected - Interested",
+    callNote: "Received offer from University of Melbourne. Discussing acceptance.",
     notes: [],
   },
   {
@@ -117,6 +141,8 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Visa Process", priority: "High", branch: "Main Branch",
     callDetails: "Visa docs submitted", nextFollowUp: "2025-03-22", isOverdue: true,
+    callOutcome: "Connected - Call Back Later",
+    callNote: "Visa documents submitted. Need to follow up on processing status.",
     notes: [],
   },
   {
@@ -126,6 +152,8 @@ export const mockLeads: Lead[] = [
     counsellor: "Sarah Mitchell", counsellorInitials: "SM", status: "Prospect",
     stage: "Converted", priority: "Medium", branch: "North Campus",
     callDetails: "Enrolled at UofT",
+    callOutcome: "Counselling Done - Positive",
+    callNote: "Successfully enrolled at University of Toronto. All documentation completed.",
     notes: [{ id: 1, text: "Successfully enrolled at University of Toronto", createdAt: "Dec 28, 2024", author: "Sarah Mitchell" }],
   },
 ];
@@ -148,4 +176,35 @@ export const mockTasks: Task[] = [
   { id: 5, leadName: "Li Wei", type: "Follow-up", dueDate: "Mar 25", status: "upcoming", description: "Discuss offer acceptance", completed: false },
   { id: 6, leadName: "John Doe", type: "Follow-up", dueDate: "Mar 14", status: "overdue", description: "Was supposed to follow up about intake", completed: false },
   { id: 7, leadName: "Carlos Rodriguez", type: "Follow-up", dueDate: "Mar 22", status: "overdue", description: "Visa document follow-up overdue", completed: false },
+];
+
+export type EventType = "Meeting" | "Follow-up" | "Deadline" | "Urgent";
+
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  type: EventType;
+  date: string;
+  startTime: string;
+  endTime: string;
+  leadName?: string;
+  notes?: string;
+  reminder?: string;
+}
+
+export const EVENT_TYPES: EventType[] = ["Meeting", "Follow-up", "Deadline", "Urgent"];
+
+export const REMINDER_OPTIONS = ["None", "5 min before", "15 min before", "30 min before", "1 hour before", "1 day before"];
+
+export const mockCalendarEvents: CalendarEvent[] = [
+  { id: 1, title: "Meeting with John Doe", type: "Meeting", date: "2026-03-24", startTime: "10:00", endTime: "11:00", leadName: "John Doe", notes: "Discuss Fall intake options", reminder: "15 min before" },
+  { id: 2, title: "Follow-up: Sara Khan", type: "Follow-up", date: "2026-03-24", startTime: "14:00", endTime: "14:30", leadName: "Sara Khan", notes: "Check on application progress", reminder: "15 min before" },
+  { id: 3, title: "Visa deadline - Carlos", type: "Deadline", date: "2026-03-25", startTime: "09:00", endTime: "09:30", leadName: "Carlos Rodriguez", notes: "Submit remaining visa documents" },
+  { id: 4, title: "Urgent: Priya's docs expiring", type: "Urgent", date: "2026-03-24", startTime: "11:30", endTime: "12:00", leadName: "Priya Patel", notes: "Documents expiring soon - need immediate action", reminder: "5 min before" },
+  { id: 5, title: "Counselling: Rahul Sharma", type: "Meeting", date: "2026-03-25", startTime: "15:00", endTime: "16:00", leadName: "Rahul Sharma", notes: "Discuss UK university options" },
+  { id: 6, title: "Follow-up: Li Wei", type: "Follow-up", date: "2026-03-26", startTime: "10:00", endTime: "10:30", leadName: "Li Wei", notes: "Discuss offer acceptance from UniMelb" },
+  { id: 7, title: "Meeting with Maria Garcia", type: "Meeting", date: "2026-03-26", startTime: "13:00", endTime: "14:00", leadName: "Maria Garcia", notes: "Initial counselling session" },
+  { id: 8, title: "Application deadline - Ahmed", type: "Deadline", date: "2026-03-27", startTime: "17:00", endTime: "17:30", leadName: "Ahmed Hassan", notes: "German university application deadline" },
+  { id: 9, title: "Follow-up: Fatima", type: "Follow-up", date: "2026-03-23", startTime: "11:00", endTime: "11:30", leadName: "Fatima Al-Rashid" },
+  { id: 10, title: "Team sync", type: "Meeting", date: "2026-03-24", startTime: "09:00", endTime: "09:30", notes: "Weekly team standup" },
 ];

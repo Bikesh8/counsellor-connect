@@ -1,12 +1,16 @@
-import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft, User, Settings } from "lucide-react";
+import { useState } from "react";
+import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft, User, Settings, CalendarDays } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 const mainItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Leads", url: "/leads", icon: Users },
   { title: "Pipeline", url: "/pipeline", icon: Kanban },
   { title: "Tasks", url: "/tasks", icon: CheckSquare },
+  { title: "Calendar", url: "/calendar", icon: CalendarDays },
 ];
 
 const managementItems = [
@@ -25,6 +29,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const location = useLocation();
+  const [calDate, setCalDate] = useState<Date | undefined>(new Date());
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -77,6 +82,21 @@ export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
         {renderSection("Main", mainItems)}
         {renderSection("Management", managementItems)}
         {renderSection("Account", accountItems)}
+
+        {/* Mini Calendar */}
+        {!collapsed && (
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground mb-2 px-3">Calendar</p>
+            <div className="rounded-lg overflow-hidden">
+              <Calendar
+                mode="single"
+                selected={calDate}
+                onSelect={setCalDate}
+                className={cn("p-1 pointer-events-auto text-sidebar-foreground [&_.rdp-day]:text-sidebar-foreground [&_.rdp-head_cell]:text-sidebar-foreground [&_.rdp-caption_label]:text-sidebar-accent-foreground [&_.rdp-nav_button]:text-sidebar-foreground [&_.rdp-day_selected]:bg-sidebar-primary [&_.rdp-day_selected]:text-sidebar-primary-foreground [&_.rdp-day_today]:bg-sidebar-accent [&_.rdp-day_today]:text-sidebar-accent-foreground [&_.rdp-button]:h-7 [&_.rdp-button]:w-7 [&_.rdp-cell]:h-7 [&_.rdp-cell]:w-7 [&_.rdp-head_cell]:w-7 [&_.rdp-head_cell]:text-[9px] [&_.rdp-caption_label]:text-xs")}
+              />
+            </div>
+          </div>
+        )}
       </nav>
 
       <div className="p-3 border-t border-sidebar-border">
