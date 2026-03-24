@@ -13,6 +13,7 @@ import StudentsPage from "./pages/StudentsPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
+import CalendarPage from "./pages/CalendarPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/leads/:id" element={<LeadProfilePage />} />
             <Route path="/pipeline" element={<PipelinePage />} />
             <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
             <Route path="/students" element={<StudentsPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/profile" element={<ProfilePage />} />

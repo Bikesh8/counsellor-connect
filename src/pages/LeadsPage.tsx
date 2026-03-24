@@ -7,10 +7,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { mockLeads, Lead, Note, COUNSELLOR_NAME } from "@/data/mockData";
+import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { mockLeads, Lead, Note, COUNSELLOR_NAME, CALL_OUTCOMES } from "@/data/mockData";
 import { PriorityBadge } from "@/components/PriorityBadge";
 import { StatusBadge } from "@/components/StatusBadge";
 import { StageBadge } from "@/components/StageBadge";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const stages = ["New Lead", "Contacted", "Interested", "Counselling", "Application Started", "Applied", "Offer Received", "Visa Process", "Converted", "Lost"];
 
@@ -21,6 +26,21 @@ export default function LeadsPage() {
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [noteLeadId, setNoteLeadId] = useState<number | null>(null);
+
+  // Follow-up scheduling
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpLeadId, setFollowUpLeadId] = useState<number | null>(null);
+  const [followUpDate, setFollowUpDate] = useState<Date | undefined>();
+
+  // Call details dialog
+  const [callDetailOpen, setCallDetailOpen] = useState(false);
+  const [callLeadId, setCallLeadId] = useState<number | null>(null);
+  const [callOutcome, setCallOutcome] = useState("");
+  const [callNote, setCallNote] = useState("");
+
+  // View call details
+  const [viewCallOpen, setViewCallOpen] = useState(false);
+  const [viewCallLead, setViewCallLead] = useState<Lead | null>(null);
 
   const filtered = leads.filter(
     (l) =>
@@ -55,7 +75,35 @@ export default function LeadsPage() {
     setNoteText("");
   };
 
+  const openFollowUp = (leadId: number) => {
+    setFollowUpLeadId(leadId);
+    setFollowUpDate(undefined);
+    setFollowUpOpen(true);
+  };
+
+  const saveFollowUp = () => {
+    if (!followUpDate || followUpLeadId === null) return;
+    const dateStr = format(followUpDate, "yyyy-MM-dd");
+    setLeads((prev) => prev.map((l) => l.id === followUpLeadId ? { ...l, nextFollowUp: dateStr, isOverdue: false } : l));
+    setFollowUpOpen(false);
+  };
+
+  const openCallDetail = (leadId: number) => {
+    const lead = leads.find((l) => l.id === leadId);
+    setCallLeadId(leadId);
+    setCallOutcome(lead?.callOutcome || "");
+    setCallNote(lead?.callNote || "");
+    setCallDetailOpen(true);
+  };
+
+  const saveCallDetail = () => {
+    if (callLeadId === null) return;
+    setLeads((prev) => prev.map((l) => l.id === callLeadId ? { ...l, callOutcome: callOutcome || undefined, callNote: callNote || undefined, callDetails: callOutcome || l.callDetails } : l));
+    setCallDetailOpen(false);
+  };
+
   const noteLeadName = noteLeadId !== null ? leads.find((l) => l.id === noteLeadId)?.name : "";
+  const followUpLeadName = followUpLeadId !== null ? leads.find((l) => l.id === followUpLeadId)?.name : "";
 
   return (
     <div>
@@ -131,7 +179,14 @@ export default function LeadsPage() {
                 <td className="py-3 px-3 text-xs">{lead.branch}</td>
                 <td className="py-3 px-3">
                   <div className="text-xs">
-                    <p className="truncate max-w-[120px]">{lead.callDetails}</p>
+                    {lead.callOutcome ? (
+                      <button onClick={() => { setViewCallLead(lead); setViewCallOpen(true); }} className="text-left hover:underline">
+                        <p className="truncate max-w-[120px] font-medium text-foreground">{lead.callOutcome}</p>
+                        {lead.callNote && <p className="truncate max-w-[120px] text-muted-foreground">{lead.callNote}</p>}
+                      </button>
+                    ) : (
+                      <p className="truncate max-w-[120px] text-muted-foreground">{lead.callDetails}</p>
+                    )}
                     {lead.nextFollowUp && (
                       <p className={`text-[10px] mt-0.5 ${lead.isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
                         {lead.isOverdue ? "⚠ Overdue: " : "Next: "}{lead.nextFollowUp}
@@ -146,9 +201,9 @@ export default function LeadsPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem className="gap-2 text-xs" onClick={() => navigate(`/leads/${lead.id}`)}><Eye className="w-3.5 h-3.5" />View Lead</DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 text-xs"><Edit className="w-3.5 h-3.5" />Update Stage</DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => openCallDetail(lead.id)}><Phone className="w-3.5 h-3.5" />Log Call / Counselling</DropdownMenuItem>
                       <DropdownMenuItem className="gap-2 text-xs" onClick={() => openNoteDialog(lead.id)}><MessageSquare className="w-3.5 h-3.5" />Add Note</DropdownMenuItem>
-                      <DropdownMenuItem className="gap-2 text-xs"><CalendarClock className="w-3.5 h-3.5" />Schedule Follow-up</DropdownMenuItem>
+                      <DropdownMenuItem className="gap-2 text-xs" onClick={() => openFollowUp(lead.id)}><CalendarClock className="w-3.5 h-3.5" />Schedule Follow-up</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </td>
@@ -174,9 +229,9 @@ export default function LeadsPage() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem className="gap-2 text-xs" onClick={() => navigate(`/leads/${lead.id}`)}><Eye className="w-3.5 h-3.5" />View Lead</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 text-xs"><Edit className="w-3.5 h-3.5" />Update Stage</DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs" onClick={(e) => { e.stopPropagation(); openCallDetail(lead.id); }}><Phone className="w-3.5 h-3.5" />Log Call / Counselling</DropdownMenuItem>
                   <DropdownMenuItem className="gap-2 text-xs" onClick={(e) => { e.stopPropagation(); openNoteDialog(lead.id); }}><MessageSquare className="w-3.5 h-3.5" />Add Note</DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 text-xs"><CalendarClock className="w-3.5 h-3.5" />Schedule Follow-up</DropdownMenuItem>
+                  <DropdownMenuItem className="gap-2 text-xs" onClick={(e) => { e.stopPropagation(); openFollowUp(lead.id); }}><CalendarClock className="w-3.5 h-3.5" />Schedule Follow-up</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -211,6 +266,86 @@ export default function LeadsPage() {
             <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>Cancel</Button>
             <Button onClick={addNote} disabled={!noteText.trim()}>Save Note</Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Follow-up Dialog */}
+      <Dialog open={followUpOpen} onOpenChange={setFollowUpOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Schedule Follow-up for {followUpLeadName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">Select a follow-up date:</p>
+            <div className="flex justify-center">
+              <Calendar
+                mode="single"
+                selected={followUpDate}
+                onSelect={setFollowUpDate}
+                className={cn("p-3 pointer-events-auto")}
+                disabled={(date) => date < new Date()}
+              />
+            </div>
+            {followUpDate && (
+              <p className="text-sm text-center text-foreground font-medium">Selected: {format(followUpDate, "PPP")}</p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setFollowUpOpen(false)}>Cancel</Button>
+              <Button onClick={saveFollowUp} disabled={!followUpDate}>Schedule</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Log Call / Counselling Dialog */}
+      <Dialog open={callDetailOpen} onOpenChange={setCallDetailOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Log Call / Counselling Outcome</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Call & Counselling Outcome</Label>
+              <Select value={callOutcome} onValueChange={setCallOutcome}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select outcome..." /></SelectTrigger>
+                <SelectContent>
+                  {CALL_OUTCOMES.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">Call & Counselling Note</Label>
+              <Textarea value={callNote} onChange={(e) => setCallNote(e.target.value)} className="mt-1 min-h-[80px]" placeholder="Describe the call or counselling session..." />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCallDetailOpen(false)}>Cancel</Button>
+              <Button onClick={saveCallDetail}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Call Details Dialog */}
+      <Dialog open={viewCallOpen} onOpenChange={setViewCallOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Call Details — {viewCallLead?.name}</DialogTitle>
+          </DialogHeader>
+          {viewCallLead && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Outcome</p>
+                <p className="text-sm font-medium text-foreground">{viewCallLead.callOutcome || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Note</p>
+                <p className="text-sm text-foreground">{viewCallLead.callNote || "—"}</p>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => setViewCallOpen(false)}>Close</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
