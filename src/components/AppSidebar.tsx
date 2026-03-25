@@ -27,7 +27,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed, onToggle }: AppSidebarProps) {
   const location = useLocation();
-  const [calDate, setCalDate] = useState<Date | undefined>(new Date());
+  
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
