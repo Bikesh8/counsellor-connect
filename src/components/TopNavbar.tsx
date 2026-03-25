@@ -1,12 +1,34 @@
-import { Search, Bell, Menu } from "lucide-react";
+import { useState } from "react";
+import { Search, Bell, Menu, Building2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { COUNSELLOR_NAME } from "@/data/mockData";
+import { mockAgencies, CURRENT_AGENCY_ID, CURRENT_BRANCH_ID } from "@/data/mockAgencies";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface TopNavbarProps {
   onMenuToggle: () => void;
 }
 
 export function TopNavbar({ onMenuToggle }: TopNavbarProps) {
+  const [selectedAgencyId, setSelectedAgencyId] = useState(CURRENT_AGENCY_ID);
+  const [selectedBranchId, setSelectedBranchId] = useState(CURRENT_BRANCH_ID);
+
+  const selectedAgency = mockAgencies.find((a) => a.id === selectedAgencyId);
+  const selectedBranch = selectedAgency?.branches.find((b) => b.id === selectedBranchId);
+
+  const handleSelect = (agencyId: number, branchId: number) => {
+    setSelectedAgencyId(agencyId);
+    setSelectedBranchId(branchId);
+  };
+
   return (
     <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-3 flex-1">
@@ -21,7 +43,47 @@ export function TopNavbar({ onMenuToggle }: TopNavbarProps) {
           />
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
+        {/* Agency/Branch Switcher */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors">
+              <Building2 className="w-4 h-4 text-muted-foreground" />
+              <div className="hidden sm:block text-left">
+                <p className="text-xs font-semibold text-foreground leading-tight">{selectedAgency?.name}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">{selectedBranch?.name}</p>
+              </div>
+              <ChevronDown className="w-3 h-3 text-muted-foreground" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            {mockAgencies.map((agency) => (
+              <div key={agency.id}>
+                <DropdownMenuLabel className="text-xs font-semibold text-foreground">{agency.name}</DropdownMenuLabel>
+                {agency.branches.map((branch) => (
+                  <DropdownMenuItem
+                    key={branch.id}
+                    onClick={() => handleSelect(agency.id, branch.id)}
+                    className={cn(
+                      "flex items-center justify-between cursor-pointer",
+                      selectedAgencyId === agency.id && selectedBranchId === branch.id && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <div>
+                      <p className="text-sm">{branch.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{branch.location}</p>
+                    </div>
+                    {selectedAgencyId === agency.id && selectedBranchId === branch.id && (
+                      <span className="text-[10px] font-medium text-primary">Active</span>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                <DropdownMenuSeparator />
+              </div>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <button className="relative text-muted-foreground hover:text-foreground">
           <Bell className="w-5 h-5" />
           <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-destructive" />
