@@ -45,6 +45,14 @@ export function TopNavbar({ onMenuToggle }: TopNavbarProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {/* Public Site Switch */}
+        <Link
+          to="/public"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          Public Site
+        </Link>
         {/* Agency/Branch Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
