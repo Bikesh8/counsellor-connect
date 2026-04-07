@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Bell, Menu, Building2, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, Bell, Menu, Building2, ChevronDown, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { COUNSELLOR_NAME } from "@/data/mockData";
 import { mockAgencies, CURRENT_AGENCY_ID, CURRENT_BRANCH_ID } from "@/data/mockAgencies";
@@ -44,6 +45,14 @@ export function TopNavbar({ onMenuToggle }: TopNavbarProps) {
         </div>
       </div>
       <div className="flex items-center gap-3">
+        {/* Public Site Switch */}
+        <Link
+          to="/public"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
+        >
+          <Globe className="w-3.5 h-3.5" />
+          Public Site
+        </Link>
         {/* Agency/Branch Switcher */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
