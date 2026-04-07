@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Bell, Menu, Building2, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, Bell, Menu, Building2, ChevronDown, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { COUNSELLOR_NAME } from "@/data/mockData";
 import { mockAgencies, CURRENT_AGENCY_ID, CURRENT_BRANCH_ID } from "@/data/mockAgencies";
