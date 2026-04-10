@@ -11,6 +11,14 @@ export interface University {
   logo: string;
   coverImage: string;
   ranking?: number;
+  founded?: number;
+  studentCount?: string;
+  acceptanceRate?: string;
+  internationalStudents?: string;
+  campusSize?: string;
+  gallery: string[];
+  highlights: string[];
+  facilities: string[];
   scholarships: Scholarship[];
   programs: Program[];
   contact: { email: string; phone: string; address: string };
@@ -28,6 +36,14 @@ export interface Program {
   ieltsRequirement: number;
   intake: string[];
   description: string;
+  gpaRequirement?: number;
+  applicationFee?: number;
+  languageOfInstruction?: string;
+  modeOfStudy?: string;
+  department?: string;
+  curriculum?: string[];
+  careerOutcomes?: string[];
+  eligibilityCriteria?: string[];
 }
 
 export interface Scholarship {
