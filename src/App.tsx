@@ -22,6 +22,7 @@ import UniversityListingPage from "./pages/public/UniversityListingPage";
 import UniversityDetailPage from "./pages/public/UniversityDetailPage";
 import CompareUniversitiesPage from "./pages/public/CompareUniversitiesPage";
 import CompareProgramsPage from "./pages/public/CompareProgramsPage";
+import ProgramDetailPage from "./pages/public/ProgramDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/public" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
             <Route path="/public/universities" element={<PublicLayout><UniversityListingPage /></PublicLayout>} />
             <Route path="/public/universities/:id" element={<PublicLayout><UniversityDetailPage /></PublicLayout>} />
+            <Route path="/public/programs/:programId" element={<PublicLayout><ProgramDetailPage /></PublicLayout>} />
             <Route path="/public/compare/universities" element={<PublicLayout><CompareUniversitiesPage /></PublicLayout>} />
             <Route path="/public/compare/programs" element={<PublicLayout><CompareProgramsPage /></PublicLayout>} />
 
