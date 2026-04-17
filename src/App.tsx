@@ -4,6 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CompareProvider } from "@/contexts/CompareContext";
+import { BillingProvider } from "@/contexts/BillingContext";
+import BillingPage from "./pages/BillingPage";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { PublicLayout } from "@/components/public/PublicLayout";
 import DashboardPage from "./pages/DashboardPage";
@@ -30,6 +32,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CompareProvider>
+        <BillingProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -45,6 +48,7 @@ const App = () => (
             <Route path="/students/:id" element={<DashboardLayout><StudentProfilePage /></DashboardLayout>} />
             <Route path="/profile" element={<DashboardLayout><ProfilePage /></DashboardLayout>} />
             <Route path="/settings" element={<DashboardLayout><SettingsPage /></DashboardLayout>} />
+            <Route path="/billing" element={<DashboardLayout><BillingPage /></DashboardLayout>} />
 
             {/* Public Site */}
             <Route path="/public" element={<PublicLayout><PublicHomePage /></PublicLayout>} />
@@ -57,6 +61,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </BillingProvider>
       </CompareProvider>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft, User, Settings, CalendarDays } from "lucide-react";
+import { LayoutDashboard, Users, Kanban, CheckSquare, GraduationCap, ChevronLeft, User, Settings, CalendarDays, CreditCard } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 
@@ -17,6 +17,7 @@ const managementItems = [
 
 const accountItems = [
   { title: "My Profile", url: "/profile", icon: User },
+  { title: "Plan & Billing", url: "/billing", icon: CreditCard },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
