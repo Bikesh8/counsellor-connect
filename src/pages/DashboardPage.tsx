@@ -11,7 +11,7 @@ export default function DashboardPage() {
     ["Counselling", "Application Started", "Applied", "Offer Received", "Visa Process"].includes(l.stage)
   ).length;
   const inProgress = mockLeads.filter((l) => ["Application Started", "Applied"].includes(l.stage)).length;
-  const pendingTasks = mockTasks.filter((t) => t.status !== "completed").length;
+  const pendingTasks = mockTasks.length;
   const overdueTasks = mockTasks.filter((t) => t.status === "overdue").length;
 
   // Pipeline by stage (study abroad context)
