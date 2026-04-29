@@ -1,233 +1,179 @@
 import { mockLeads, mockTasks, mockCalendarEvents, COUNSELLOR_NAME } from "@/data/mockData";
 import {
-  Users, UserCheck, AlertTriangle, TrendingUp, Phone, Calendar as CalendarIcon,
-  Target, DollarSign, Clock, ArrowUpRight, ArrowDownRight, CheckCircle2,
-  GraduationCap, Globe, Activity, Award,
+  Info, Bell, Download, Plus, ArrowRight, Clock,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  PieChart, Pie, Cell, BarChart, Bar, Legend,
-} from "recharts";
-import { StageBadge } from "@/components/StageBadge";
-import { PriorityBadge } from "@/components/PriorityBadge";
-
-const COLORS = ["hsl(var(--primary))", "hsl(var(--badge-low))", "hsl(var(--badge-medium))", "hsl(var(--badge-high))", "hsl(var(--muted-foreground))"];
 
 export default function DashboardPage() {
   const totalLeads = mockLeads.length;
-  const converted = mockLeads.filter((l) => l.stage === "Converted").length;
-  const overdueTasks = mockTasks.filter((t) => t.status === "overdue").length;
-  const todayTasks = mockTasks.filter((t) => t.status === "today").length;
-  const highPriority = mockLeads.filter((l) => l.priority === "High").length;
-  const inPipeline = mockLeads.filter((l) => !["Converted", "Lost", "New Lead"].includes(l.stage)).length;
-  const applicationsSubmitted = mockLeads.filter((l) =>
-    ["Applied", "Offer Received", "Visa Process", "Converted"].includes(l.stage)
+  const activeStudents = mockLeads.filter((l) => !["Lost"].includes(l.stage)).length;
+  const openCases = mockLeads.filter((l) =>
+    ["Counselling", "Application Started", "Applied", "Offer Received", "Visa Process"].includes(l.stage)
   ).length;
-  const offersReceived = mockLeads.filter((l) => ["Offer Received", "Visa Process", "Converted"].includes(l.stage)).length;
-  const conversionRate = ((converted / totalLeads) * 100).toFixed(1);
-  const responseRate = 78;
+  const inProgress = mockLeads.filter((l) => ["Application Started", "Applied"].includes(l.stage)).length;
+  const pendingTasks = mockTasks.length;
+  const overdueTasks = mockTasks.filter((t) => t.status === "overdue").length;
 
-  // KPI cards
-  const stats = [
-    { label: "Total Leads", value: totalLeads, icon: Users, color: "text-primary", bg: "bg-primary/10", change: "+12%", up: true },
-    { label: "Conversion Rate", value: `${conversionRate}%`, icon: Target, color: "text-badge-low", bg: "bg-badge-low-bg", change: "+3.2%", up: true },
-    { label: "Active Pipeline", value: inPipeline, icon: Activity, color: "text-badge-medium", bg: "bg-badge-medium-bg", change: "+5", up: true },
-    { label: "Overdue Tasks", value: overdueTasks, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/10", change: "-2", up: false },
+  // Pipeline by stage (study abroad context)
+  const pipelineStages = [
+    { label: "Inquiry", key: "New Lead", color: "bg-muted-foreground/40" },
+    { label: "Counselling", key: "Counselling", color: "bg-primary" },
+    { label: "Docs Collected", key: "Application Started", color: "bg-[hsl(250_60%_55%)]" },
+    { label: "Applied", key: "Applied", color: "bg-[hsl(35_90%_55%)]" },
+    { label: "Offer Received", key: "Offer Received", color: "bg-[hsl(160_65%_42%)]" },
+    { label: "Visa Refused", key: "Lost", color: "bg-destructive" },
   ];
-
-  // Pipeline funnel
-  const stages = ["New Lead", "Contacted", "Interested", "Counselling", "Application Started", "Applied", "Offer Received", "Visa Process", "Converted"];
-  const funnelData = stages.map((s) => ({
-    stage: s,
-    count: mockLeads.filter((l) => l.stage === s).length,
+  const pipelineData = pipelineStages.map((s) => ({
+    ...s,
+    count: mockLeads.filter((l) => l.stage === s.key).length,
   }));
+  const maxPipeline = Math.max(...pipelineData.map((p) => p.count), 1);
 
-  // Leads by country
+  // Country segments (replacing Skilled/Student/Partner)
   const countryMap = mockLeads.reduce<Record<string, number>>((acc, l) => {
     acc[l.country] = (acc[l.country] || 0) + 1;
     return acc;
   }, {});
-  const countryData = Object.entries(countryMap).map(([name, value]) => ({ name, value }));
+  const topCountries = Object.entries(countryMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+  const countryTiles = topCountries.map(([name, count], i) => ({
+    name,
+    pct: Math.round((count / totalLeads) * 100),
+    bg: ["bg-primary/10 text-primary", "bg-[hsl(160_65%_42%)]/10 text-[hsl(160_65%_30%)]", "bg-[hsl(35_90%_55%)]/15 text-[hsl(35_90%_35%)]"][i],
+  }));
 
-  // Source distribution
-  const sourceMap = mockLeads.reduce<Record<string, number>>((acc, l) => {
-    acc[l.source] = (acc[l.source] || 0) + 1;
-    return acc;
-  }, {});
-  const sourceData = Object.entries(sourceMap).map(([name, value]) => ({ name, value }));
-
-  // Trend (mock 6 months)
-  const trendData = [
-    { month: "Oct", leads: 18, converted: 3 },
-    { month: "Nov", leads: 22, converted: 5 },
-    { month: "Dec", leads: 19, converted: 4 },
-    { month: "Jan", leads: 28, converted: 6 },
-    { month: "Feb", leads: 32, converted: 8 },
-    { month: "Mar", leads: totalLeads, converted },
-  ];
-
-  const upcomingEvents = [...mockCalendarEvents]
+  // Upcoming deadlines from calendar + overdue tasks
+  const upcoming = [...mockCalendarEvents]
     .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime))
     .slice(0, 4);
 
-  const recentLeads = [...mockLeads].sort((a, b) => b.id - a.id).slice(0, 5);
-  const todayList = mockTasks.filter((t) => t.status === "today" || t.status === "overdue").slice(0, 5);
-
-  // Top programs
-  const programMap = mockLeads.reduce<Record<string, number>>((acc, l) => {
-    acc[l.program] = (acc[l.program] || 0) + 1;
-    return acc;
-  }, {});
-  const topPrograms = Object.entries(programMap)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
+  // Recent activity feed
+  const activity = [
+    { dot: "bg-[hsl(160_65%_42%)]", text: `${mockLeads[0]?.name}'s application lodged via University Portal`, time: "10m ago" },
+    { dot: "bg-[hsl(35_90%_55%)]", text: `Invoice #INV-2841 overdue — ${mockLeads[1]?.name} — $1,200`, time: "1h ago" },
+    { dot: "bg-[hsl(250_60%_55%)]", text: `${COUNSELLOR_NAME} clocked in · 9:02 AM · Main Branch`, time: "3h ago" },
+    { dot: "bg-primary", text: `Service Agreement sent to ${mockLeads[2]?.name}`, time: "4h ago" },
+    { dot: "bg-destructive", text: `Visa refused — ${mockLeads[3]?.name} — Review required`, time: "Yesterday" },
+    { dot: "bg-[hsl(160_65%_42%)]", text: `New lead: ${mockLeads[4]?.name} — via Instagram`, time: "Yesterday" },
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Welcome back, {COUNSELLOR_NAME} — here's your day at a glance.</p>
-        </div>
-        <div className="flex gap-2">
-          <Link to="/leads" className="px-3 py-2 text-sm font-medium border border-border rounded-md hover:bg-muted">View Leads</Link>
-          <Link to="/calendar" className="px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90">Open Calendar</Link>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="bg-card rounded-lg border border-border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-9 h-9 rounded-md flex items-center justify-center ${stat.bg}`}>
-                <stat.icon className={`w-5 h-5 ${stat.color}`} />
-              </div>
-              <span className={`text-xs font-semibold flex items-center gap-0.5 ${stat.up ? "text-badge-low" : "text-destructive"}`}>
-                {stat.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {stat.change}
-              </span>
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-            <p className="text-xs text-muted-foreground">{stat.label}</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold text-foreground">Dashboard</h1>
+        <div className="flex items-center gap-2">
+          <div className="relative hidden md:block">
+            <input
+              type="text"
+              placeholder="Search clients, cases…"
+              className="w-72 px-3 py-1.5 text-sm bg-card border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+            />
           </div>
-        ))}
+          <button className="w-9 h-9 rounded-md border border-border bg-card flex items-center justify-center hover:bg-muted">
+            <Bell className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button className="px-3 py-1.5 text-sm font-medium border border-border rounded-md bg-card hover:bg-muted flex items-center gap-1.5">
+            <Download className="w-4 h-4" /> Export
+          </button>
+          <Link to="/leads" className="px-3 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-1.5">
+            <Plus className="w-4 h-4" /> New Client
+          </Link>
+        </div>
       </div>
 
-      {/* Secondary KPIs */}
+      {/* Alert banner */}
+      <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-md text-sm">
+        <Info className="w-4 h-4 text-primary shrink-0" />
+        <p className="text-foreground">
+          <span className="font-semibold">{overdueTasks} deadlines</span>
+          <span className="text-muted-foreground"> in the next 7 days · </span>
+          <span className="font-semibold">2 invoices overdue</span>
+          <span className="text-muted-foreground"> · {COUNSELLOR_NAME} on approved leave until 5 May</span>
+        </p>
+      </div>
+
+      {/* KPI tiles */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: GraduationCap, label: "Applications Submitted", value: applicationsSubmitted },
-          { icon: Award, label: "Offers Received", value: offersReceived },
-          { icon: Phone, label: "Response Rate", value: `${responseRate}%` },
-          { icon: CheckCircle2, label: "Tasks Today", value: todayTasks },
+          { label: "ACTIVE CLIENTS", value: activeStudents, sub: "↑ 12 this month", subColor: "text-[hsl(160_65%_42%)]", bar: "bg-primary", barWidth: "70%" },
+          { label: "OPEN CASES", value: openCases, sub: `${inProgress} in progress`, subColor: "text-muted-foreground", bar: "bg-[hsl(250_60%_55%)]", barWidth: "55%" },
+          { label: "REVENUE MTD", value: "$94k", sub: "↑ 18% vs Apr", subColor: "text-[hsl(160_65%_42%)]", bar: "bg-[hsl(160_65%_42%)]", barWidth: "85%" },
+          { label: "PENDING TASKS", value: pendingTasks, sub: `${overdueTasks} overdue`, subColor: "text-destructive", bar: "bg-destructive", barWidth: "40%" },
         ].map((s) => (
-          <div key={s.label} className="bg-card rounded-lg border border-border p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-              <s.icon className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-lg font-semibold text-foreground">{s.value}</p>
-              <p className="text-xs text-muted-foreground">{s.label}</p>
+          <div key={s.label} className="bg-card rounded-lg border border-border p-4">
+            <p className="text-[11px] font-semibold tracking-wider text-muted-foreground">{s.label}</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{s.value}</p>
+            <p className={`text-xs mt-1 ${s.subColor}`}>{s.sub}</p>
+            <div className="h-1 bg-muted rounded-full mt-3 overflow-hidden">
+              <div className={`h-full ${s.bar} rounded-full`} style={{ width: s.barWidth }} />
             </div>
           </div>
         ))}
       </div>
 
-      {/* Charts row */}
+      {/* Main grid */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Trend */}
+        {/* Case Pipeline */}
         <div className="lg:col-span-2 bg-card rounded-lg border border-border p-4">
           <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="font-semibold text-foreground">Leads & Conversions</h2>
-              <p className="text-xs text-muted-foreground">Last 6 months</p>
-            </div>
-            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+            <h2 className="font-semibold text-foreground">Case Pipeline</h2>
+            <Link to="/pipeline" className="text-xs text-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={trendData}>
-              <defs>
-                <linearGradient id="leadsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="convGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--badge-low))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="hsl(var(--badge-low))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-              <Area type="monotone" dataKey="leads" stroke="hsl(var(--primary))" fill="url(#leadsGrad)" strokeWidth={2} />
-              <Area type="monotone" dataKey="converted" stroke="hsl(var(--badge-low))" fill="url(#convGrad)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Source pie */}
-        <div className="bg-card rounded-lg border border-border p-4">
-          <h2 className="font-semibold text-foreground mb-1">Lead Sources</h2>
-          <p className="text-xs text-muted-foreground mb-4">Where leads come from</p>
-          <ResponsiveContainer width="100%" height={220}>
-            <PieChart>
-              <Pie data={sourceData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3}>
-                {sourceData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Pie>
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="space-y-1.5 mt-2">
-            {sourceData.map((s, i) => (
-              <div key={s.name} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
-                  <span className="text-foreground">{s.name}</span>
+          <div className="space-y-3">
+            {pipelineData.map((p) => (
+              <div key={p.label} className="flex items-center gap-3">
+                <span className="w-32 text-sm text-foreground shrink-0">{p.label}</span>
+                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full ${p.color} rounded-full`} style={{ width: `${(p.count / maxPipeline) * 100}%` }} />
                 </div>
-                <span className="text-muted-foreground">{s.value}</span>
+                <span className="w-8 text-right text-sm font-medium text-foreground">{p.count}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Country segments */}
+          <div className="grid grid-cols-3 gap-3 mt-5">
+            {countryTiles.map((c) => (
+              <div key={c.name} className={`rounded-md py-4 text-center ${c.bg}`}>
+                <p className="text-[11px] font-semibold tracking-wider opacity-80">{c.name.toUpperCase()}</p>
+                <p className="text-2xl font-bold mt-1">{c.pct}%</p>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Pipeline funnel + Country */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="lg:col-span-2 bg-card rounded-lg border border-border p-4">
-          <h2 className="font-semibold text-foreground mb-1">Pipeline Funnel</h2>
-          <p className="text-xs text-muted-foreground mb-4">Leads at each stage</p>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={funnelData} layout="vertical" margin={{ left: 30 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis dataKey="stage" type="category" stroke="hsl(var(--muted-foreground))" fontSize={11} width={120} />
-              <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="count" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
+        {/* Upcoming Deadlines */}
         <div className="bg-card rounded-lg border border-border p-4">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="font-semibold text-foreground">Top Destinations</h2>
-            <Globe className="w-4 h-4 text-muted-foreground" />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground">Upcoming Deadlines</h2>
+            <Link to="/calendar" className="text-xs text-primary hover:underline flex items-center gap-1">
+              All <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Leads by country</p>
           <div className="space-y-3">
-            {countryData.sort((a, b) => b.value - a.value).map((c) => {
-              const pct = (c.value / totalLeads) * 100;
+            {upcoming.map((e) => {
+              const d = new Date(e.date);
+              const days = Math.max(0, Math.ceil((d.getTime() - Date.now()) / 86400000));
               return (
-                <div key={c.name}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-medium text-foreground">{c.name}</span>
-                    <span className="text-muted-foreground">{c.value} ({pct.toFixed(0)}%)</span>
+                <div key={e.id} className="flex items-start gap-3">
+                  <div className="w-11 text-center shrink-0 bg-muted rounded-md py-1">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase">{d.toLocaleDateString("en-US", { month: "short" })}</p>
+                    <p className="text-base font-bold text-foreground leading-none">{d.getDate()}</p>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                        {days === 0 ? "today" : `${days} day${days > 1 ? "s" : ""}`}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <Clock className="w-3 h-3" /> {e.startTime} · Assigned: {COUNSELLOR_NAME}
+                    </p>
                   </div>
                 </div>
               );
@@ -236,125 +182,87 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tasks + Events + Recent leads */}
+      {/* Recent Activity + Right column */}
       <div className="grid gap-4 lg:grid-cols-3">
-        {/* Today's tasks */}
-        <div className="bg-card rounded-lg border border-border">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground">Today & Overdue</h2>
-            </div>
-            <Link to="/tasks" className="text-xs text-primary hover:underline">View all</Link>
+        {/* Recent Activity */}
+        <div className="lg:col-span-2 bg-card rounded-lg border border-border p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground">Recent Activity</h2>
+            <Link to="/leads" className="text-xs text-primary hover:underline flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
           </div>
-          <div className="divide-y divide-border max-h-80 overflow-auto">
-            {todayList.length === 0 && <p className="p-4 text-sm text-muted-foreground">No tasks for today</p>}
-            {todayList.map((t) => (
-              <div key={t.id} className="p-3 flex items-start gap-3">
-                <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${t.status === "overdue" ? "bg-destructive" : "bg-primary"}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{t.description}</p>
-                  <p className="text-xs text-muted-foreground">{t.leadName} · {t.type}</p>
-                </div>
-                <span className={`text-xs font-semibold ${t.status === "overdue" ? "text-destructive" : "text-muted-foreground"}`}>
-                  {t.dueDate}
-                </span>
+          <div className="space-y-3">
+            {activity.map((a, i) => (
+              <div key={i} className="flex items-center gap-3 py-1">
+                <span className={`w-2 h-2 rounded-full ${a.dot} shrink-0`} />
+                <p className="text-sm text-foreground flex-1 truncate">{a.text}</p>
+                <span className="text-xs text-muted-foreground shrink-0">{a.time}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Upcoming events */}
-        <div className="bg-card rounded-lg border border-border">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground">Upcoming Events</h2>
-            </div>
-            <Link to="/calendar" className="text-xs text-primary hover:underline">Calendar</Link>
+        {/* Team at a Glance */}
+        <div className="bg-card rounded-lg border border-border p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold text-foreground">Team at a Glance</h2>
+            <Link to="/settings" className="text-xs text-primary hover:underline">Go to Team →</Link>
           </div>
-          <div className="divide-y divide-border max-h-80 overflow-auto">
-            {upcomingEvents.map((e) => (
-              <div key={e.id} className="p-3 flex items-start gap-3">
-                <div className="w-12 text-center shrink-0">
-                  <p className="text-xs text-muted-foreground">{new Date(e.date).toLocaleDateString("en-US", { month: "short" })}</p>
-                  <p className="text-lg font-bold text-foreground leading-none">{new Date(e.date).getDate()}</p>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{e.title}</p>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {e.startTime} - {e.endTime}
-                  </p>
-                </div>
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            {[
+              { label: "STAFF", value: 18, color: "text-primary" },
+              { label: "ON LEAVE", value: 3, color: "text-[hsl(35_90%_45%)]" },
+              { label: "TODAY IN", value: 14, color: "text-[hsl(160_65%_42%)]" },
+            ].map((s) => (
+              <div key={s.label} className="bg-muted/50 rounded-md p-3 text-center">
+                <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">{s.label}</p>
+                <p className={`text-2xl font-bold mt-1 ${s.color}`}>{s.value}</p>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Top programs */}
-        <div className="bg-card rounded-lg border border-border">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-4 h-4 text-primary" />
-              <h2 className="font-semibold text-foreground">Top Programs</h2>
-            </div>
-            <span className="text-xs text-muted-foreground">By demand</span>
-          </div>
-          <div className="divide-y divide-border">
-            {topPrograms.map(([prog, count], i) => (
-              <div key={prog} className="p-3 flex items-center gap-3">
-                <span className="w-6 h-6 rounded-md bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
-                  {i + 1}
-                </span>
+          <p className="text-xs font-medium text-muted-foreground mb-2">Leave Pending Approval</p>
+          <div className="space-y-2">
+            {[
+              { name: "Mia Nguyen", initials: "MN", detail: "Annual Leave · 1–5 May (5 days)", status: "Pending", statusColor: "bg-[hsl(35_90%_55%)]/15 text-[hsl(35_90%_35%)]" },
+              { name: "Ryan Thomas", initials: "RT", detail: "Sick Leave · 29 Apr", status: "Approved", statusColor: "bg-[hsl(160_65%_42%)]/15 text-[hsl(160_65%_30%)]" },
+            ].map((p) => (
+              <div key={p.name} className="flex items-center gap-2.5 p-2 rounded-md hover:bg-muted/40">
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center shrink-0">
+                  {p.initials}
+                </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{prog}</p>
-                  <p className="text-xs text-muted-foreground">{count} {count === 1 ? "lead" : "leads"}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{p.detail}</p>
                 </div>
-                <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${(count / totalLeads) * 100}%` }} />
-                </div>
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${p.statusColor}`}>{p.status}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Recent leads table */}
-      <div className="bg-card rounded-lg border border-border">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-foreground">Recent Leads</h2>
-          <Link to="/leads" className="text-xs text-primary hover:underline">View all</Link>
+      {/* Finance Snapshot */}
+      <div className="bg-card rounded-lg border border-border p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-foreground">Finance Snapshot</h2>
+          <Link to="/billing" className="text-xs text-primary hover:underline">Go to Finance →</Link>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 text-xs text-muted-foreground">
-              <tr>
-                <th className="text-left font-medium px-4 py-2">Name</th>
-                <th className="text-left font-medium px-4 py-2">Program</th>
-                <th className="text-left font-medium px-4 py-2">Country</th>
-                <th className="text-left font-medium px-4 py-2">Stage</th>
-                <th className="text-left font-medium px-4 py-2">Priority</th>
-                <th className="text-left font-medium px-4 py-2">Next Follow-up</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {recentLeads.map((l) => (
-                <tr key={l.id} className="hover:bg-muted/30">
-                  <td className="px-4 py-3">
-                    <Link to={`/leads/${l.id}`} className="font-medium text-foreground hover:text-primary">{l.name}</Link>
-                    <p className="text-xs text-muted-foreground">{l.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-foreground">{l.program}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{l.country}</td>
-                  <td className="px-4 py-3"><StageBadge stage={l.stage} /></td>
-                  <td className="px-4 py-3"><PriorityBadge priority={l.priority} /></td>
-                  <td className={`px-4 py-3 text-xs ${l.isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}`}>
-                    {l.nextFollowUp || "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            { label: "COLLECTED", value: "$94k", bg: "bg-[hsl(160_65%_42%)]/10", color: "text-[hsl(160_65%_30%)]" },
+            { label: "OVERDUE", value: "$12k", bg: "bg-destructive/10", color: "text-destructive" },
+            { label: "PENDING", value: "$28k", bg: "bg-[hsl(35_90%_55%)]/15", color: "text-[hsl(35_90%_35%)]" },
+          ].map((f) => (
+            <div key={f.label} className={`rounded-md py-5 text-center ${f.bg}`}>
+              <p className={`text-[11px] font-semibold tracking-wider ${f.color} opacity-80`}>{f.label}</p>
+              <p className={`text-2xl font-bold mt-1 ${f.color}`}>{f.value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border text-sm">
+          <span className="text-muted-foreground">Payroll Due 15 May</span>
+          <span className="font-semibold text-foreground">$56,400</span>
         </div>
       </div>
     </div>
