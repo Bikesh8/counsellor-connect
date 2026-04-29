@@ -64,10 +64,16 @@ export default function DashboardPage() {
   const distTotal = leadDistributionData.reduce((s, d) => s + d.count, 0);
 
   // ===== TABLES =====
+  const priorityByType: Record<string, "High" | "Medium" | "Low"> = {
+    "Follow-up": "Medium",
+    "Document Review": "High",
+    "Counselling Session": "High",
+    "Application Check": "Low",
+  };
   const tasksToday = mockTasks.slice(0, 5).map((t, i) => ({
     id: `TSK-${1000 + i}`,
-    title: t.title,
-    priority: t.priority,
+    title: `${t.type} — ${t.leadName}`,
+    priority: priorityByType[t.type] || "Medium",
     status: t.status,
     dueDate: t.dueDate,
     leadId: `LD-${200 + i}`,
